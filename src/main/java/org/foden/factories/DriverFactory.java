@@ -29,7 +29,14 @@ public final class DriverFactory {
         String browser = PropertyUtils.get(ConfigProperties.BROWSER);
         String runmode = PropertyUtils.get(ConfigProperties.RUNMODE);
         boolean runOnBrowserStack = true;
-            if (runOnBrowserStack){
+        boolean runOnJenkinsChromeBinary = true;
+            if (runOnJenkinsChromeBinary){
+                System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
+                ChromeOptions options = new ChromeOptions();
+                options.addArguments("headless");
+                options.addArguments("disable-gpu");
+                driver = new ChromeDriver(options);
+            }else if(runOnBrowserStack){
                 String username = System.getenv("BROWSERSTACK_USERNAME");
                 String accessKey = System.getenv("BROWSERSTACK_ACCESS_KEY");
                 String buildName = System.getenv("BROWSERSTACK_BUILD_NAME");
@@ -44,7 +51,7 @@ public final class DriverFactory {
                 browserstackOptions.put("sessionName", "BStack Build Name: " + buildName);
                 browserstackOptions.put("local", local);
                 browserstackOptions.put("localIdentifier",localidentifier);
-                browserstackOptions.put("seleniumVersion", "4.0.0");
+//                browserstackOptions.put("seleniumVersion", "4.0.0");
                 capabilities.setCapability("bstack:options", browserstackOptions);
 
                 driver = new RemoteWebDriver(new URL("https://" + username + ":" + accessKey + "@hub.browserstack.com/wd/hub"), capabilities);
