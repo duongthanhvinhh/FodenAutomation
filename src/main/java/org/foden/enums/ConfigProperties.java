@@ -41,5 +41,6 @@ public enum ConfigProperties {
      */
     NUMBEROFRETRIES,
     RUNMODE,
-    SELENIUMGRIDURL
+    SELENIUMGRIDURL,
+    BROWSERSTACKURL
 }

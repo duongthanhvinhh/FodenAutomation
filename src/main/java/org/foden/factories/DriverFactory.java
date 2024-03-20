@@ -16,6 +16,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Objects;
 
 public final class DriverFactory {
@@ -27,48 +28,71 @@ public final class DriverFactory {
         WebDriver driver = null;
         String browser = PropertyUtils.get(ConfigProperties.BROWSER);
         String runmode = PropertyUtils.get(ConfigProperties.RUNMODE);
+        boolean runOnBrowserStack = true;
+            if (runOnBrowserStack){
+                String username = System.getenv("BROWSERSTACK_USERNAME");
+                String accessKey = System.getenv("BROWSERSTACK_ACCESS_KEY");
+                String buildName = System.getenv("BROWSERSTACK_BUILD_NAME");
+                String local = System.getenv("BROWSERSTACK_LOCAL");
+                String localidentifier = System.getenv("BROWSERSTACK_LOCAL_IDENTIFIER");
 
-            if (browser.equalsIgnoreCase("chrome")){
+                DesiredCapabilities capabilities = new DesiredCapabilities();
+                capabilities.setCapability("browserName", "Chrome");
+                HashMap<String, Object> browserstackOptions = new HashMap<String, Object>();
+                browserstackOptions.put("os", "Windows");
+                browserstackOptions.put("osVersion", "10");
+                browserstackOptions.put("sessionName", "BStack Build Name: " + buildName);
+                browserstackOptions.put("local", local);
+                browserstackOptions.put("localIdentifier",localidentifier);
+                browserstackOptions.put("seleniumVersion", "4.0.0");
+                capabilities.setCapability("bstack:options", browserstackOptions);
 
-                if (runmode.equalsIgnoreCase("remote")){
-                    DesiredCapabilities cap = new DesiredCapabilities();
-                    cap.setBrowserName("chrome");
-                    ChromeOptions options = new ChromeOptions();
+                driver = new RemoteWebDriver(new URL("https://" + username + ":" + accessKey + "@hub.browserstack.com/wd/hub"), capabilities);
+            } else {
+                if (browser.equalsIgnoreCase("chrome")){
+
+                    if (runmode.equalsIgnoreCase("remote")){
+                        DesiredCapabilities cap = new DesiredCapabilities();
+                        cap.setBrowserName("chrome");
+                        ChromeOptions options = new ChromeOptions();
 //                    options.setBrowserVersion("124.0");
-                    options.addArguments("--disable-dev-shm-usage");
-                    options.addArguments("--no-sandbox");
-                    options.addArguments("start-maximized");
-                    options.addArguments("disable-infobars");
-                    options.addArguments("--disable-gpu");
-                    options.addArguments("--headless");
-                    options.addArguments("--remote-debugging-pipe");
-                    driver = new RemoteWebDriver(new URL(PropertyUtils.get(ConfigProperties.SELENIUMGRIDURL)),cap);
-                }else {
-                    WebDriverManager.chromedriver().setup();
+                        options.addArguments("--disable-dev-shm-usage");
+                        options.addArguments("--no-sandbox");
+                        options.addArguments("start-maximized");
+                        options.addArguments("disable-infobars");
+                        options.addArguments("--disable-gpu");
+                        options.addArguments("--headless");
+                        options.addArguments("--remote-debugging-pipe");
+                        driver = new RemoteWebDriver(new URL(PropertyUtils.get(ConfigProperties.SELENIUMGRIDURL)),cap);
+                    }else {
+                        WebDriverManager.chromedriver().setup();
 //                WebDriverManager.getInstance(DriverManagerType.CHROME);
 //                WebDriverManager.chromedriver().proxy("http://username:password@mycompanyproxy.com:port");
-                    ChromeOptions options = new ChromeOptions();
-                    if (FrameworkConstants.isHeadless()){
-                        options.addArguments("--headless");
+                        ChromeOptions options = new ChromeOptions();
+                        if (FrameworkConstants.isHeadless()){
+                            options.addArguments("--headless");
+                        }
+                        driver = new ChromeDriver(options);
                     }
-                    driver = new ChromeDriver(options);
-                }
 
-            } else if (browser.equalsIgnoreCase("firefox")) {
+                } else if (browser.equalsIgnoreCase("firefox")) {
 
-                if (runmode.equalsIgnoreCase("remote")){
-                    DesiredCapabilities cap = new DesiredCapabilities();
-                    cap.setBrowserName("firefox");
-                    driver = new RemoteWebDriver(new URL(PropertyUtils.get(ConfigProperties.SELENIUMGRIDURL)),cap);
-                }else {
-                    WebDriverManager.firefoxdriver().setup();
-                    FirefoxOptions options = new FirefoxOptions();
-                    if (FrameworkConstants.isHeadless()){
-                        options.addArguments("--headless");
+                    if (runmode.equalsIgnoreCase("remote")){
+                        DesiredCapabilities cap = new DesiredCapabilities();
+                        cap.setBrowserName("firefox");
+                        driver = new RemoteWebDriver(new URL(PropertyUtils.get(ConfigProperties.SELENIUMGRIDURL)),cap);
+                    }else {
+                        WebDriverManager.firefoxdriver().setup();
+                        FirefoxOptions options = new FirefoxOptions();
+                        if (FrameworkConstants.isHeadless()){
+                            options.addArguments("--headless");
+                        }
+                        driver = new FirefoxDriver(options);
                     }
-                    driver = new FirefoxDriver(options);
                 }
-        }
+            }
+
+
             return driver;
     }
 }
